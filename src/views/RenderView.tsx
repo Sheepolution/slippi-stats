@@ -6,7 +6,7 @@ import { Header } from "components/Header";
 import { Options } from "containers/Options";
 import { useParam } from "lib/hooks";
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { GlobalTheme } from "styles/theme";
 
 import { RenderDisplay } from "../containers/RenderDisplay";
@@ -25,6 +25,8 @@ export interface RenderViewProps {
 export const RenderView: React.FC<RenderViewProps> = ({ showSlippiLogo }) => {
   const [primaryColor] = useParam("primaryColor");
   const [secondaryColor] = useParam("secondaryColor");
+  const history = useHistory();
+
   return (
     <div
       css={css`

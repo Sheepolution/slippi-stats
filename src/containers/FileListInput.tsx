@@ -8,10 +8,12 @@ import { readFileAsGameDetails } from "lib/readFile";
 import { generateSearchParams } from "lib/searchParams";
 import { generateStatParams } from "lib/stats";
 import { GameDetails, Stat } from "lib/stats/types";
-import React, { useCallback, useContext } from "react";
-import { useHistory } from "react-router-dom";
+import React, { useCallback, useContext, useEffect } from "react";
+import { useHistory, useLocation } from "react-router-dom";
 
 import { AppContext, Types } from "../store";
+import { onGameFinished, onGameStarted, setDirectory } from "../store/autoloader"
+import { SetCallback } from "./RenderDisplay";
 import { StatOption, StatOptions } from "./StatOptions";
 
 const STAT_OPTIONS_STORE_KEY = "statOptions";
@@ -32,6 +34,9 @@ const ALL_STATS: string[] = [
 ];
 
 const DEFAULT_STATS = [Stat.OPENINGS_PER_KILL, Stat.DAMAGE_DONE, Stat.AVG_KILL_PERCENT, Stat.NEUTRAL_WINS];
+
+let numberOfFiles = 0;
+let mergeStats = false
 
 const getDefaultStats = (): StatOption[] => {
   const current = DEFAULT_STATS.map((s) => ({
@@ -58,14 +63,26 @@ const generateStatsList = (options: StatOption[]): string[] => {
 
 export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }) => {
   const history = useHistory();
+  const location = useLocation();
   const { state, dispatch } = useContext(AppContext);
   const [error, setError] = React.useState<any>(null);
   const [showOptions, setShowOptions] = React.useState(false);
+  const [readyToGo, setReadyToGo] = React.useState(false);
 
   const clearAll = () => {
     dispatch({
       type: Types.CLEAR_ALL,
     });
+    history.replace("/");
+    console.log("History length", history.length);
+  };
+
+  const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setDirectory(e.target.value);
+  };
+
+  const onChange = (e: React.FocusEvent<HTMLInputElement>) => {
+    mergeStats = e.target.checked;
   };
 
   let defaultStats = getDefaultStats();
@@ -89,7 +106,7 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
     setStatOptions(options);
   };
 
-  const onClick = () => {
+  const onClick = useCallback(() => {
     try {
       const gameDetails = state.files.filter((f) => f.details !== null).map((f) => f.details as GameDetails);
       const params = generateStatParams(gameDetails, generateStatsList(statOptions));
@@ -102,7 +119,75 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
       console.error(error);
       setError(err);
     }
-  };
+  },
+  [error, history, setError, statOptions, state.files]);
+
+  const onSpecific = useCallback((n: number) => {
+    try {
+      const gameDetails = state.files.filter((f) => f.details !== null).map((f) => f.details as GameDetails);
+      let params;
+      if (n > gameDetails.length) {
+        params = generateStatParams(gameDetails, generateStatsList(statOptions));
+      } else {
+        params = generateStatParams([gameDetails[n - 1]], generateStatsList(statOptions));
+      }
+      const search = "?" + generateSearchParams(params).toString();
+      history.push({
+        pathname: "/render",
+        search,
+      });
+    } catch (err) {
+      console.error(error);
+      setError(err);
+    }
+  },
+  [error, history, setError, statOptions, state.files]);
+
+  SetCallback(onSpecific);
+  
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (!isNaN(parseInt(e.key))) {
+        onSpecific(parseInt(e.key));
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Don't forget to clean up
+    return function cleanup() {
+      document.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [onSpecific]);
+
+  useEffect(() => {
+    if (state.files.length === 0) {
+      numberOfFiles = 0;
+      return;
+    }
+
+    if (state.files.length <= numberOfFiles) {
+      return;
+    }
+
+    if (!state.files[state.files.length - 1].details) {
+      return;
+    }
+
+    if (!readyToGo) {
+      return;
+    }
+
+    console.log("Files changed", state.files);
+    console.log(mergeStats);
+    if (mergeStats) {
+      onClick();
+      return;
+    }
+
+    onSpecific(state.files.length);
+    numberOfFiles = state.files.length;
+  }, [state.files, readyToGo, onSpecific, onClick]);
 
   const onRemove = (filename: string) => {
     dispatch({
@@ -151,11 +236,28 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
       // Print the time taken when complete
       Promise.all(promises).then(() => {
         const time = new Date().getTime() - startTime;
+        setReadyToGo(true);
         console.log(`Finished processing in ${time}ms`);
       });
     },
     [dispatch, error]
   );
+
+  onGameFinished((file: File) => {
+    onDrop([file]);
+  });
+
+  onGameStarted(() => {
+    setTimeout( () => {
+      history.push({
+        pathname: "/",
+      });
+
+      if (!mergeStats && state.files.length > 0) {
+        clearAll();
+      }
+    }, 1000);
+  });
 
   const finishedProcessing = !state.files.find((f) => f.loading);
   const buttonText =
@@ -186,6 +288,14 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
       <SecondaryButton align="right" onClick={() => setShowOptions(true)}>
         customize stats
       </SecondaryButton>
+
+      <div>
+        <input type="checkbox" id="test" onChange={onChange} />
+        <label htmlFor="test">Merge stats</label>
+      </div>
+      <br/>
+      <input type="text" placeholder="Path to your slippi files" onBlur={onBlur} />
+      <br/>
       <DropPad accept=".slp" onDrop={onDrop} />
       <div
         css={css`
@@ -201,7 +311,7 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
         <PrimaryButton
           backgroundColor={buttonColor}
           color="white"
-          disabled={state.files.length === 0 || !finishedProcessing}
+          // disabled={state.files.length === 0 || !finishedProcessing}
           onClick={onClick}
         >
           {buttonText}

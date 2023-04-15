@@ -1,10 +1,16 @@
 import "./index.scss";
 
+import { createBrowserHistory, createHashHistory } from "history";
 import React from "react";
 import ReactDOM from "react-dom";
 
 import App from "./App";
 import * as serviceWorker from "./serviceWorker";
+import { isElectron } from "./utils"
+
+export const history = isElectron()
+  ? createHashHistory()
+  : createBrowserHistory();
 
 ReactDOM.render(
   <React.StrictMode>

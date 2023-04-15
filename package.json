@@ -1,5 +1,6 @@
 {
   "name": "slippi-stats",
+  "description": "A desktop application for automatically viewing stats",
   "homepage": ".",
   "author": {
     "name": "Vince Au",
@@ -8,14 +9,29 @@
   },
   "license": "MIT",
   "version": "0.0.1",
+  "main": "electron/main.ts",
+  "build": {
+    "appId": "nl.slippistats.app",
+    "extends": null,
+    "files": [
+      "electron/**/*",
+      "build/**/*"
+    ]
+  },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "PUBLIC_URL=/ react-scripts build",
+    "build-electron": "react-scripts build",
     "test": "react-scripts test",
     "typecheck": "tsc --noEmit --skipLibCheck",
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "lint": "eslint --ignore-path .gitignore src --ext ts --ext tsx --ext js --ext jsx",
-    "lint:fix": "yarn run lint --fix"
+    "lint:fix": "yarn run lint --fix",
+    "electron:start": "concurrently \"yarn start\" \"wait-on http://localhost:3000 && electron .\"",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "electron:build": "yarn build-electron && electron-builder build --publish never"
+
   },
   "husky": {
     "hooks": {
@@ -24,9 +40,13 @@
     }
   },
   "dependencies": {
+    "@electron-forge/cli": "^6.1.1",
     "@emotion/core": "^10.0.28",
     "@emotion/styled": "^10.0.27",
     "@slippi/slippi-js": "^6.2.1",
+    "chokidar": "^3.5.3",
+    "electron-is-dev": "^2.0.0",
+    "electron-squirrel-startup": "^1.0.0",
     "lodash": "^4.17.20",
     "moment": "^2.29.4",
     "react": "^16.13.1",
@@ -36,9 +56,14 @@
     "react-dom": "^16.13.1",
     "react-dropzone": "^11.2.4",
     "react-router-dom": "^5.2.0",
-    "react-scripts": "3.4.1"
+    "react-scripts": "3.4.1",
+    "sass": "^1.61.0"
   },
   "devDependencies": {
+    "@electron-forge/maker-deb": "^6.1.1",
+    "@electron-forge/maker-rpm": "^6.1.1",
+    "@electron-forge/maker-squirrel": "^6.1.1",
+    "@electron-forge/maker-zip": "^6.1.1",
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
@@ -53,17 +78,20 @@
     "@types/react-router-dom": "^5.1.6",
     "@typescript-eslint/eslint-plugin": "^2.30.0",
     "@typescript-eslint/parser": "^2.30.0",
+    "concurrently": "^8.0.1",
+    "electron": "^24.0.0",
+    "electron-builder": "^23.6.0",
     "eslint-config-prettier": "^6.7.0",
     "eslint-plugin-prettier": "^3.1.1",
     "eslint-plugin-simple-import-sort": "^5.0.0",
     "eslint-plugin-strict-booleans": "^1.0.0",
     "husky": "^4.2.5",
-    "node-sass": "^4.14.0",
     "prettier": "^2.0.5",
     "pretty-quick": "^2.0.1",
     "react-hot-loader": "^4.12.21",
     "source-map-explorer": "^2.5.2",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "wait-on": "^7.0.1"
   },
   "browserslist": {
     "production": [
