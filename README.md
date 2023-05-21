@@ -2,7 +2,36 @@
 
 > Automatically generate Summit-style Slippi set stats. Say that 5 times.
 
-Instantly compute Slippi stats in-browser and beautifully render the results. Perfect for both tournament broadcasts and competitors.
+Instantly compute Slippi stats and beautifully render the results. Perfect for both tournament broadcasts and competitors.
+
+## Fork
+
+This is a fork with the purpose of changing Slippi Stats Graphic Generator into an **app** that **automatically shows the result** when a match has ended. This makes it even more useful for tournaments, as 
+
+## Usage
+
+1. Download and open.
+2. Enter the path where your .slp files will appear.
+
+Now whenever a match is finished the application will automatically show the match results.
+
+### Keeping files and merging stats
+
+By checking `Keep files` it will keep all the stats files for you to watch back. For example, if you have three files, and another game ends, it will show the stats of the fourth game. You can press `2` to watch the stats of the second match. By pressing `0` you will see all these files merged. If you want to automatically see the stats of multiple matches merged, you can enable the `Merge stats` option. Note that `Merge stats` does nothing with `Keep files` disabled.
+
+**Your settings are saved, even though the checkbox might be unchecked again.** The same counts for your Slippi path.
+
+Some scenarios:
+
+* You are playing friendlies, and want to show the stats after each game. You uncheck `Keep files` and `Merge files`.
+
+* You have a tournament, and want to show the stats of each individual game. At the end you want show to statistics of the whole set. You check `Keep files` and uncheck `Merge files`. At the end of the set you press `0`.
+
+* You have a tournament, and at the end you want show to statistics of the whole set. You check `Keep files` and check `Merge files`.
+
+## Note
+
+This is my first time working with React and Electron, so stuff is wack it but works. Feel free to make a pull request if you want to improve it.
 
 ## Screenshot
 
@@ -13,15 +42,7 @@ Instantly compute Slippi stats in-browser and beautifully render the results. Pe
 - Extremely fast offline stats computation
 - Easy drag-and-drop into OBS
 - Highly customizable
-- No download required
 - Free and open source
-
-## Usage
-
-1. Go to <https://vinceau.github.io/slippi-stats/>
-2. Drag and drop your SLP files
-3. Click "Generate Stats"
-4. Drag the OBS button into OBS to instantly create a source
 
 ![animated gif showing the usage](docs/images/usage.gif)
 
@@ -67,6 +88,12 @@ It reads your SLP files locally and does all the computation in-browser. Nothing
 
 ### Setup
 
+Install Electron
+
+```bash
+npm install -g electron
+```
+
 Clone the repo and install dependencies:
 
 ```bash
@@ -78,15 +105,15 @@ yarn install
 In the project directory, you can run:
 
 ```bash
-yarn run start
+yarn electron:start
 ```
 
-This runs the app in the development mode. Open <http://localhost:3000> to view it in the browser. The page will reload as you make changes.
+This runs the app in the development mode. Ignore that the browser opens <http://localhost:3000> (you can close it) and wait for the app to appear.. The app will reload as you make changes.
 
 To build the app for production, run:
 
 ```bash
-yarn run build
+yarn electron:build
 ```
 
 ### Adding Custom Stats

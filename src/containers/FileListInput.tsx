@@ -37,6 +37,8 @@ const DEFAULT_STATS = [Stat.OPENINGS_PER_KILL, Stat.DAMAGE_DONE, Stat.AVG_KILL_P
 
 let numberOfFiles = 0;
 let mergeStats = false
+let keepFiles = false
+let nextFile: File|null = null;
 
 const getDefaultStats = (): StatOption[] => {
   const current = DEFAULT_STATS.map((s) => ({
@@ -81,8 +83,12 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
     setDirectory(e.target.value);
   };
 
-  const onChange = (e: React.FocusEvent<HTMLInputElement>) => {
+  const onChangeMerge = (e: React.FocusEvent<HTMLInputElement>) => {
     mergeStats = e.target.checked;
+  };
+
+  const onChangeKeep = (e: React.FocusEvent<HTMLInputElement>) => {
+    keepFiles = e.target.checked;
   };
 
   let defaultStats = getDefaultStats();
@@ -126,7 +132,7 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
     try {
       const gameDetails = state.files.filter((f) => f.details !== null).map((f) => f.details as GameDetails);
       let params;
-      if (n > gameDetails.length) {
+      if (n > gameDetails.length || n === 0) {
         params = generateStatParams(gameDetails, generateStatsList(statOptions));
       } else {
         params = generateStatParams([gameDetails[n - 1]], generateStatsList(statOptions));
@@ -144,6 +150,17 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
   [error, history, setError, statOptions, state.files]);
 
   SetCallback(onSpecific);
+
+  useEffect(() => {
+    if (nextFile) {
+      if (!keepFiles && state.files.length > 0) {
+        clearAll();
+      }
+      
+      onDrop([nextFile]);
+      nextFile = null;
+    }
+  });
   
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -166,10 +183,6 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
       return;
     }
 
-    if (state.files.length <= numberOfFiles) {
-      return;
-    }
-
     if (!state.files[state.files.length - 1].details) {
       return;
     }
@@ -178,8 +191,6 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
       return;
     }
 
-    console.log("Files changed", state.files);
-    console.log(mergeStats);
     if (mergeStats) {
       onClick();
       return;
@@ -244,20 +255,15 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
   );
 
   onGameFinished((file: File) => {
-    onDrop([file]);
+    history.push({
+      pathname: "/",
+    });
+
+    nextFile = file;
   });
 
-  onGameStarted(() => {
-    setTimeout( () => {
-      history.push({
-        pathname: "/",
-      });
-
-      if (!mergeStats && state.files.length > 0) {
-        clearAll();
-      }
-    }, 1000);
-  });
+  // onGameStarted(() => {
+  // });
 
   const finishedProcessing = !state.files.find((f) => f.loading);
   const buttonText =
@@ -290,8 +296,12 @@ export const FileListInput: React.FC<{ buttonColor: string }> = ({ buttonColor }
       </SecondaryButton>
 
       <div>
-        <input type="checkbox" id="test" onChange={onChange} />
-        <label htmlFor="test">Merge stats</label>
+        <input type="checkbox" id="keep" onChange={onChangeKeep} />
+        <label htmlFor="keep">Keep files</label>
+      </div>
+      <div>
+        <input type="checkbox" id="merge" onChange={onChangeMerge} />
+        <label htmlFor="merge">Merge stats</label>
       </div>
       <br/>
       <input type="text" placeholder="Path to your slippi files" onBlur={onBlur} />
