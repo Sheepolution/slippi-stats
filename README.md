@@ -6,7 +6,7 @@ Instantly compute Slippi stats and beautifully render the results. Perfect for b
 
 ## Fork
 
-This is a fork with the purpose of changing Slippi Stats Graphic Generator into an **app** that **automatically shows the result** when a match has ended. This makes it even more useful for tournaments, as 
+This is a fork with the purpose of changing Slippi Stats Graphic Generator into an **app** that **automatically shows the result** when a match has ended. This makes it even more useful for tournaments, as you can instantly switch to the scene with the stats, and don't need to manually add them to the page first.
 
 ## Usage
 
